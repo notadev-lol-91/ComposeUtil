@@ -27,7 +27,7 @@ This program has been tested with `docker` and should work with `podman` aswell,
 # Usage
 This program is basically compatible with all of `docker-compose`'s commands, plus a few extras:
 ```
-Special commands (marked with '*' means does not need stack-name):
+Special commands (marked with '*' means does not need a stack name):
   *cd Starts a new shell in the directory of the stacks
   *ls Shows all available stacks.
   mod Modifies the existing stack or creates a new one.
