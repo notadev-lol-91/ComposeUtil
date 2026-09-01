@@ -25,6 +25,7 @@ Simply:
 This program has been tested with `docker` and should work with `podman` aswell, however other engines have not been tested, but may work.   
 
 # Usage
+`composeutil <stack-name> <action>`
 This program is basically compatible with all of `docker-compose`'s commands, plus a few extras:
 ```
 Special commands (marked with '*' means does not need a stack name):
