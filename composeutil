@@ -58,8 +58,10 @@ for file in $STACKS ; do
 done
 
 if ! $is_valid; then
-	echo 'Invalid stack name!'
-	show_help
+        if [ $2 != 'mod' ]; then
+                echo 'Invalid stack name!'
+                show_help
+        fi
 fi
 
 pass_to_docker () {
