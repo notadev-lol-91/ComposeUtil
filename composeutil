@@ -87,7 +87,7 @@ modify_stack () {
 }
 
 case $1 in
-	ls) echo $STACKS ;;
+	ls) echo $STACKS | head -c -13 ; printf "\n" ;;
 	cd) pushd $BASEDIR && echo 'Use ^D to back out!' && bash -i && popd>/dev/null ;;
 	--help) show_help ;;
 	*) pass_to_docker $* ;;
