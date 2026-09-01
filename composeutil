@@ -1,0 +1,96 @@
+#!/bin/bash
+# Directory where all of your stacks are located. (NO TRAILING SLASH)
+BASEDIR=/opt/stacks
+
+# Name of your compose files
+FILE=compose.yml
+
+# Container Engine name (docker, podman, etc.) (NOT podman-compose or docker-compose, etc.)
+CTRNAME=docker
+
+PROGNAME=$(basename -s .sh $0)
+STACKS=$(basename -a $(ls -d $BASEDIR/*/))
+STACKS="$STACKS ls cd --help"
+
+show_help() {
+	printf "\n"
+	cat <<EOF
+Container Engine: "$CTRNAME"
+Base Directory: "$BASEDIR"
+Expected compose file name: "$FILE"
+Usage: $PROGNAME <stack-name> <literally-any-docker-compose-action>
+Utility to deal with Docker Compose stacks in a fixed directory.
+This program needs docker/podman and a compose plugin, obviously.
+You need to open this file with a text editor and set the top three variables for it to work correctly!
+Any stacks With the special names 'ls' and 'cd' will be ignored.
+Special commands (marked with '*' means does not need stack-name:)
+  *cd Starts a new shell in the directory of the stacks
+  *ls Shows all available stacks.
+  mod Modifies the existing stack or creates a new one.
+The program Terminates with exit code 128 for syntax errors, passes through error-codes otherwise.
+Refer to '$CTRNAME compose --help' for more info.
+Author: Farhad
+EOF
+	exit 128
+}
+
+if ! [ -d $BASEDIR ]; then
+	echo 'Invalid BASEDIR value!'
+	show_help
+fi
+
+# Some crude syntax checking
+if [ $# -lt "2" ]; then
+    case $1 in
+	ls|cd|--help) true ;;
+        *) echo 'Too few arguments.' && show_help ;;
+    esac
+fi
+
+
+# Some more crude syntax checking for stack name
+is_valid=false
+for file in $STACKS ; do
+	if [ $1 == $file ]; then
+		is_valid=true
+		break
+	fi
+done
+
+if ! $is_valid; then
+	echo 'Invalid stack name!'
+	show_help
+fi
+
+pass_to_docker () {
+  if [ $2 = mod ]; then
+    modify_stack $1
+    return $?
+  fi
+  STACK=$1
+  shift
+  $CTRNAME compose -f ${BASEDIR}/${STACK}/${FILE} $*
+}
+
+modify_stack () {
+  if [ ! -d $BASEDIR/$1 ]; then
+    echo 'Stack not found.'
+    read -re -n 1 -p 'Make a new one? \(Y/N\)'
+    if [ $REPLY = y ] || [ $REPLY = Y ]; then
+      mkdir ${BASEDIR}/${STACK}/ > /dev/null
+    else
+      echo 'Aborted. '
+      exit
+    fi
+  fi
+  sensible-editor $BASEDIR/$1/$FILE
+}
+
+case $1 in
+	ls) echo $STACKS ;;
+	cd) pushd $BASEDIR && echo 'Use ^D to back out!' && bash -i && popd>/dev/null ;;
+	--help) show_help ;;
+	*) pass_to_docker $* ;;
+esac
+
+exit $?
